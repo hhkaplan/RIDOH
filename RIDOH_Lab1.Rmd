@@ -1,0 +1,162 @@
+---
+title: "RIDOH Water Monitoring Data"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+___________________________________________________________________________________________________________________________
+The goal of this lab is to open a large dataset in the programming language "R" and plot different types of data. The data has 20+ variables measured at over 500 sites across Rhode Island between 1998 and 2014. Once the data has been imported, we will: (1) figure out where the sites are located, (2) study one (marine?) site through time and (3) create maps of __ and __ across Rhode Island for 2013.
+___________________________________________________________________________________________________________________________
+Step 1: Download and set up R/ RStudio (we will all do this together)
+___________________________________________________________________________________________________________________________
+Step 2: Familiarize yourself with the console. Try pasting the following into the console one at a time: 
+
+```{r, echo= TRUE, results="hide"}
+# anything after a # sign is ignored, this is used to describe the code
+2+2
+
+1 * (2 / (1 + 1))
+
+62318*349/493
+
+#We can save data that we want use again inside a variable, this one is called 'variable1'
+variable1 = 1:10
+print(variable1)
+
+variable2 = 10:1
+print(variable2)
+
+#this picks a random number between 1 and 5 and records that value 10 times
+variable3 = sample(1:5,10,replace=T) 
+print(variable3) 
+
+#let's try plotting it:
+plot(variable1, variable2, main="Scatterplot Example", 
+  	xlab="X axis", ylab="Y axis")
+
+#add these points to the plot
+points(variable1, variable3, col="red") 
+
+#fit a line through the data
+abline(lm(variable2~variable1), col="black") 
+abline(lm(variable3~variable1), col="red") 
+```
+____________________________________________________________________________________________________________________________
+Step 3: Mapping sites
+
+Now let's try importing some Excel data into R. The file called 'RIDOH_supporting_data.xlsx' contains information about the data. This is called metadata. For instance, it defines the units that RIDOH uses (e.g. cfs = cubic feet per second), the analytical methods, waterbody types, etc. We're going to use the data in the Sites tab, which gives information about each sampling site including latitude and longitude. We can use lat/lon coordinates to map the sites:
+
+Hint: you need to change the file path to correctly point to your file. Each of these steps may take some time.
+
+```{r , echo=TRUE, results="hide"}
+### The following lines need to be run once (and only once) before you can continue (remove #)
+# install.packages(c("maps", "ggplot2"))
+# library(maps)
+# library(ggplot2)
+
+dat <- read.csv("/Volumes/HK/RIDOH Files/RIDOH Supporting Files.csv",header=TRUE, stringsAsFactors=FALSE)
+```
+
+How many variables and observations does 'dat' have? Where can you find this info? We can display the variable names and figure out which columns contain latitude and longitude information.
+ 
+```{r}
+dimnames(dat)[2]
+```
+
+```{r , echo=TRUE, results="hide"}
+
+#Plot the points on a map
+county_map = map_data("county", region = "rhode island")
+state_map = map_data("state", region = "rhode island")
+
+ggplot()+ geom_polygon(data=county_map, aes(x=long, y=lat, group=group)) +
+         geom_polygon(data =state_map, aes(x=long, y=lat, group=group, col="red")) +
+         geom_point(data=dat, aes(x=LON_DD, y=LAT_DD), color="red") +
+         ggtitle("RiDOH Sites")+ coord_fixed(1.2)
+
+```
+____________________________________________________________________________________________________________________________
+Step 4: Let's look at a couple of these sites and how they've changed over time
+Breakdown of the code shown below:
+
+```{r , echo=TRUE, results="hide"}
+
+#Import the data
+site273 <- read.csv("/Volumes/HK/RIDOH Files/WW273.csv", stringsAsFactors=F)
+dimnames(site273)[2]
+
+#Find parameter we want to look at (start with salinity)
+Sal_index_273 = which(site273$Parameter == "Salinity, (ppt) - 00480")
+Sal_data_273 = site273[Sal_index_273,]
+
+#Convert dates into a format R can read
+Sal_data_273$Date <- as.Date(Sal_data_273$Date, "%m/%d/%Y")
+
+#Plot a timeline
+ggplot(data = Sal_data_273, aes(Date, Concentration))+ geom_point()
+
+```
+Follow-up questions for step 4:
+-What happens if we plot a smaller range of dates? (Try: Sal_data_273[17:46,])
+-Try plotting dissolved O and dissolved N for the same dataset, what do they look like?
+-Try adding "+geom_smooth(method = "lm", se = FALSE)" to the plots
+-What environmental factors lead to these changes in salinity, O, N?
+____________________________________________________________________________________________________________________________
+Step 5: Plot values for 2013 from 'Database_2013.csv' and see how they look spatially
+Breakdown of the code shown below:
+1) import a new dataset with data for all of RI for the year 2013
+2) link the sites listed in that dataset with latitude and longitude provided in 'RIDOH_supporting_data.csv'. We can do this because both datasets have a column with the station names (WW1, WW250 etc.), so we will merge the two datasets by having R find where the names are the same.
+3) plot measurements spatially
+
+```{r , echo=TRUE, results="hide"}
+
+#Import the data
+dat2014 <- read.csv("/Volumes/HK/RIDOH Files/Database_2014.csv", stringsAsFactors=F)
+dimnames(dat2014)[2]
+
+#Sort through and find all the temperature measurements:
+Temp_index = which(dat2014$Parameter == "Dissolved Oxygen - 00300")
+Temp_data = dat2014[Temp_index,]
+
+#Find the average temperature at every site
+Temp_data_mean = aggregate(Temp_data$Concentration, list(Station.Name = Temp_data$Station.Name), mean, na.rm=TRUE)
+
+#Get names, lats, and longs of all sites from the original dataset we used 
+latlong = data.frame(dat[,2], dat[,11], dat[,12])
+colnames(latlong) = c("Station.Name", "Latitude", "Longitude")
+dimnames(latlong)[2]
+
+#Add long and lat to the 2013 data by linking the two datasets by site name
+mergedTempData <- merge(Temp_data_mean, latlong, by="Station.Name")
+dimnames(mergedTempData)[2]
+
+#Plot the temperatures on a map
+county_map = map_data("county", region = "rhode island")
+state_map = map_data("state", region = "rhode island")
+
+ggplot()+ geom_polygon(data=county_map, aes(x=long, y=lat, group=group)) +
+         geom_polygon(data =state_map, aes(x=long, y=lat, group=group), col = "red") +
+         geom_point(data=mergedTempData, aes(x=Longitude, y=Latitude, color = x)) +
+         scale_color_gradient(low = "#4004f7", high = "#f70404",guide = "colourbar") +
+         ggtitle("RiDOH Sites: Average Temperatures in 2014") + coord_fixed(1.2)
+```
+Extra: Try the following code - what is it doing?
+```{r , echo=TRUE, results="hide"}
+
+interpdf <-interp2xyz(interp(x=mergedTempData$Longitude, y=mergedTempData$Latitude, z=mergedTempData$x, duplicate="mean", extrap=TRUE))
+interpdf <- as.data.frame(interpdf)
+interpdf <- na.omit(interpdf)
+
+ggplot() + 
+  geom_raster(data = interpdf, aes(x = x, y = y, fill = z)) + 
+  geom_contour(data = interpdf, aes(x = x, y = y, z = z), color = "white", alpha = 0.05)+
+  geom_polygon(data =state_map, aes(x=long, y=lat, group = group), fill = NA, col = "red") + coord_fixed(1.2)
+            
+```
+Follow-up questions for step 5:
+-Min/Mean/Max
+-Interesting: dissolved oxygen, dissolved N
+
+```
