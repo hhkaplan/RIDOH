@@ -127,7 +127,7 @@ ggplot(data = Sal_data_273, aes(Date, Concentration))+ geom_point()
 *Follow-up questions for Step 4:* 
 
 1. What happens if we plot a smaller range of dates? (Try: Sal_data_273[17:46,])
-2. Try plotting dissolved O and dissolved N for the same dataset, what do they look like?
+2. Try plotting secchi depth, dissolved O and dissolved N for the same dataset, what do they look like?
 3. Try adding "+geom_smooth(method = "lm", se = FALSE)" to the plots 
 4. What environmental factors lead to these changes in salinity, O, N? 
 
@@ -144,6 +144,7 @@ Breakdown of the code shown below:
 ```{r , echo=TRUE, results="hide"}
 
 #Import the data
+dat <- read.csv("/Users/Hannah/Documents/RIDOH/RIDOH Supporting Files.csv",header=TRUE, stringsAsFactors=FALSE)
 dat2014 <- read.csv("/Users/Hannah/Documents/RIDOH/Database_2014.csv", stringsAsFactors=F)
 dimnames(dat2014)[2]
 
@@ -159,7 +160,7 @@ latlong = data.frame(dat[,2], dat[,11], dat[,12])
 colnames(latlong) = c("Station.Name", "Latitude", "Longitude")
 dimnames(latlong)[2]
 
-#Add long and lat to the 2013 data by linking the two datasets by site name
+#Add long and lat to the 2014 data by linking the two datasets by site name
 mergedTempData <- merge(Temp_data_mean, latlong, by="Station.Name")
 dimnames(mergedTempData)[2]
 ```
@@ -171,8 +172,9 @@ state_map = map_data("state", region = "rhode island")
 ggplot()+ geom_polygon(data=county_map, aes(x=long, y=lat, group=group)) +
          geom_polygon(data =state_map, aes(x=long, y=lat, group=group), col = "red") +
          geom_point(data=mergedTempData, aes(x=Longitude, y=Latitude, color = x)) +
-         scale_color_gradient(low = "#4004f7", high = "#f70404",guide = "colourbar") +
+         scale_color_gradient(low = "#0000FFFF", high = "#FF0000FF",guide = "colourbar") +
          ggtitle("RiDOH Sites: Average Temperatures in 2014") + coord_fixed(1.2)
+
 ```
 
 Extra: Try the following code - what is it doing?
