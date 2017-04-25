@@ -226,7 +226,7 @@ dat2014 &lt;- read.csv(&quot;/Users/Hannah/Documents/RIDOH/Database_2014.csv&quo
 dimnames(dat2014)[2]
 
 #Sort through and find all the temperature measurements:
-Temp_index = which(dat2014$Parameter == &quot;Dissolved Oxygen - 00300&quot;)
+Temp_index = which(dat2014$Parameter == &quot;Temperature - 00011&quot;)
 Temp_data = dat2014[Temp_index,]
 
 #Find the average temperature at every site
@@ -258,9 +258,15 @@ int &lt;- na.omit(int)
 
 ggplot() +
   geom_raster(data = int, aes(x = x, y = y, fill = z), interpolate = TRUE) +
+  scale_fill_gradientn(colours=c(&quot;#0000FFFF&quot;,&quot;#FFFFFFFF&quot;,&quot;#FF0000FF&quot;))+
   geom_contour(data = int, aes(x = x, y = y, z = z), color = &quot;black&quot;, alpha = 0.1)+
   geom_polygon(data =state_map, aes(x=long, y=lat, group = group), fill = NA, col = &quot;red&quot;) + coord_fixed(1.2)</code></pre>
-<p><em>Follow-up questions for Step 5:</em> 1.Min/Mean/Max return 2.Interesting: dissolved oxygen, dissolved N return</p>
+<p><em>Follow-up questions for Step 5:</em></p>
+<ol style="list-style-type: decimal">
+<li>For the code under the comment “#Find the average temperature at every site” what happens if we replace mean with min or max?</li>
+<li>Interesting parameters to plot: dissolved oxygen, Nitrogen (total unfiltered), pH</li>
+<li>What relationships do we expect to occur between these parameters? Do we see evidence for eutrophication?</li>
+</ol>
 <p>```</p>
 
 

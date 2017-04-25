@@ -148,7 +148,7 @@ dat2014 <- read.csv("/Users/Hannah/Documents/RIDOH/Database_2014.csv", stringsAs
 dimnames(dat2014)[2]
 
 #Sort through and find all the temperature measurements:
-Temp_index = which(dat2014$Parameter == "Dissolved Oxygen - 00300")
+Temp_index = which(dat2014$Parameter == "Temperature - 00011")
 Temp_data = dat2014[Temp_index,]
 
 #Find the average temperature at every site
@@ -186,12 +186,15 @@ int <- na.omit(int)
 
 ggplot() +
   geom_raster(data = int, aes(x = x, y = y, fill = z), interpolate = TRUE) +
+  scale_fill_gradientn(colours=c("#0000FFFF","#FFFFFFFF","#FF0000FF"))+
   geom_contour(data = int, aes(x = x, y = y, z = z), color = "black", alpha = 0.1)+
   geom_polygon(data =state_map, aes(x=long, y=lat, group = group), fill = NA, col = "red") + coord_fixed(1.2)
 ```
 
 *Follow-up questions for Step 5:* 
-1.Min/Mean/Max  return
-2.Interesting: dissolved oxygen, dissolved N  return
+
+1. For the code under the comment "#Find the average temperature at every site" what happens if we replace mean with min or max?
+2. Interesting parameters to plot: dissolved oxygen, Nitrogen (total unfiltered), pH
+3. What relationships do we expect to occur between these parameters? Do we see evidence for eutrophication?
 
 ```
